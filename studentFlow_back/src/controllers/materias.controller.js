@@ -71,3 +71,28 @@ export async function deleteMateria(request, response, next) {
     return next(error);
   }
 }
+
+/**
+ * Controlador para obtener todas las tareas de una materia específica dado su ID y el usuario autenticado.
+ *
+ * @async
+ * @function getTareasByMateriaId
+ * @param {Object} request - Objeto de solicitud HTTP de Express.
+ * @param {Object} request.params - Parámetros de ruta en la URL.
+ * @param {string} request.params.id - Identificador de la materia.
+ * @param {Object} request.user - Objeto de usuario autenticado.
+ * @param {string|number} request.user.id - ID del usuario autenticado.
+ * @param {Object} response - Objeto de respuesta HTTP de Express.
+ * @param {Function} next - Función para delegar errores al manejador global.
+ *
+ * @returns {Promise<void>} Envía respuesta HTTP 200 con la lista de tareas de la materia.
+ */
+export async function getTareasByMateriaId(request, response, next) {
+  try {
+    const id = validateMateriaId(request.params.id);
+    const tareas = await materiasService.getTareasByMateriaId(id, request.user.id);
+    return sendSuccess(response, tareas);
+  } catch (error) {
+    return next(error);
+  }
+}

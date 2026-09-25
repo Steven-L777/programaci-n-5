@@ -236,3 +236,63 @@ export async function updateMateria(id, userId, materia) {
 
   return findByIdAndUserId(id, userId);
 }
+
+/**
+ * Mapea una fila de tarea de la base de datos a un objeto formateado en camelCase.
+ *
+ * @function mapTarea
+ * @param {Object} row - Fila cruda retornada por la consulta SQL.
+ *
+ * @returns {Object} Objeto de tarea con propiedades en camelCase.
+ */
+function mapTarea(row) {
+  return {
+    id: row.id,
+    materiaId: row.materiaId,
+    titulo: row.titulo,
+    descripcion: row.descripcion,
+    fechaEntrega: row.fechaEntrega,
+    horaEntrega: row.horaEntrega,
+    prioridad: row.prioridad,
+    estado: row.estado,
+    cargaEstimadaMinutos: row.cargaEstimadaMinutos,
+    porcentajeAvance: row.porcentajeAvance,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt
+  };
+}
+
+/**
+ * Busca y retorna todas las tareas de una materia asegurando que pertenezca al usuario especificado.
+ *
+ * @async
+ * @function findTareasByMateriaIdAndUserId
+ * @param {string|number} materiaId - Identificador único de la materia.
+ * @param {string|number} userId - Identificador único del usuario propietario.
+ *
+ * @returns {Promise<Array<Object>>} Lista de tareas pertenecientes a la materia del usuario.
+ */
+export async function findTareasByMateriaIdAndUserId(materiaId, userId) {
+  const [rows] = await pool.execute(
+    `SELECT
+       t.id_tarea AS id,
+       t.id_materia AS materiaId,
+       t.titulo,
+       t.descripcion,
+       t.fecha_entrega AS fechaEntrega,
+       t.hora_entrega AS horaEntrega,
+       t.prioridad,
+       t.estado,
+       t.carga_estimada_minutos AS cargaEstimadaMinutos,
+       t.porcentaje_avance AS porcentajeAvance,
+       t.created_at AS createdAt,
+       t.updated_at AS updatedAt
+     FROM tarea t
+     INNER JOIN materia m ON t.id_materia = m.id_materia
+     WHERE m.id_materia = ? AND m.id_usuario = ?
+     ORDER BY t.fecha_entrega ASC, t.hora_entrega ASC`,
+    [materiaId, userId]
+  );
+
+  return rows.map(mapTarea);
+}

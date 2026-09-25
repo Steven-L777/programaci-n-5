@@ -12,6 +12,7 @@ Repositorio del proyecto de clase.
 |--------|------|---------|
 | GET | `/` | listMaterias |
 | GET | `/:id` | getMateriaById |
+| GET | `/:id/tareas` | getTareasByMateriaId |
 | POST | `/` | createMateria |
 | PUT | `/:id` | replaceMateria |
 | PATCH | `/:id` | updateMateria |
