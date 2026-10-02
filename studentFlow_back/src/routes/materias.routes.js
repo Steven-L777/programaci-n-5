@@ -7,7 +7,8 @@ import {
   replaceMateria,
   updateMateria,
   deleteMateria,
-  getTareasByMateriaId
+  getTareasByMateriaId,
+  listEventosByMateria
 } from "../controllers/materias.controller.js";
 
 const router = Router();
@@ -17,6 +18,7 @@ const router = Router();
 router.get("/", listMaterias);
 router.get("/:id", getMateriaById);
 router.get("/:id/tareas", getTareasByMateriaId);
+router.get("/:id/eventos", listEventosByMateria);
 router.post("/", createMateria);
 router.put("/:id", replaceMateria);
 router.patch("/:id", updateMateria);

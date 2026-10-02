@@ -296,3 +296,35 @@ export async function findTareasByMateriaIdAndUserId(materiaId, userId) {
 
   return rows.map(mapTarea);
 }
+
+/**
+ * Busca y retorna todos los eventos de una materia asegurando que pertenezca al usuario especificado.
+ *
+ * @async
+ * @function findEventosByMateriaAndUserId
+ * @param {string|number} id - Identificador único de la materia.
+ * @param {string|number} userId - Identificador único del usuario propietario.
+ *
+ * @returns {Promise<Array<Object>>} Lista de eventos pertenecientes a la materia del usuario.
+ */
+export async function findEventosByMateriaAndUserId(id, userId) {
+  const [rows] = await pool.execute(
+    `SELECT
+       e.id_evento AS id,
+       e.id_materia AS materiaId,
+       e.titulo,
+       e.descripcion,
+       e.fecha,
+       e.hora_inicio AS horaInicio,
+       e.hora_fin AS horaFin,
+       e.tipo,
+       e.created_at AS createdAt,
+       e.updated_at AS updatedAt
+     FROM evento e
+     INNER JOIN materia m ON m.id_materia = e.id_materia
+     WHERE m.id_materia = ? AND m.id_usuario = ?`,
+    [id, userId]
+  );
+
+  return rows;
+}

@@ -177,3 +177,17 @@ export async function getTareasByMateriaId(materiaId, userId) {
   await getMateriaById(materiaId, userId);
   return materiasRepository.findTareasByMateriaIdAndUserId(materiaId, userId);
 }
+
+/**
+ * Obtiene todos los eventos asociados a una materia del usuario autenticado.
+ *
+ * @async
+ * @function listEventosByMateria
+ * @param {string|number} id - Identificador único de la materia.
+ * @param {string|number} userId - Identificador único del usuario dueño de la materia.
+ *
+ * @returns {Promise<Array<Object>>} Lista de eventos pertenecientes a la materia del usuario.
+ */
+export async function listEventosByMateria(id, userId) {
+  return materiasRepository.findEventosByMateriaAndUserId(id, userId);
+}
