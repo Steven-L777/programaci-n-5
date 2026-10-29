@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudentFlow · Gestión de recordatorios</title>
+  <link rel="stylesheet" href="./css/styles.css">
+  <link rel="stylesheet" href="./css/llamados-completos.css">
+  <link rel="stylesheet" href="./css/recordatorios.css">
+  <script type="module" src="./js/pages/recordatorios.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">StudentFlow / Ejemplo de clase</p>
+      <h1>Gestión de recordatorios</h1>
+      <p>Administración completa de alertas y notificaciones programadas asociadas a tareas y materias.</p>
+    </header>
+
+    <!-- Menú de navegación organizado estilo profesor -->
+    <nav class="navegacion" aria-label="Menú del módulo de recordatorios">
+      <button type="button" class="activa" data-seccion="listar">📋 Listar</button>
+      <button type="button" data-seccion="crear">➕ Crear</button>
+      <button type="button" data-seccion="consultar">🔍 Consultar / Editar</button>
+      <button type="button" data-seccion="tareas">📚 Tareas disponibles</button>
+      <a href="./llamadoCompleto/listar.html" title="Ir a materias">🏷️ Materias de clase</a>
+      <a href="./index.html" title="Volver a la consola de pruebas">⚡ Consola de pruebas</a>
+    </nav>
+
+    <!-- ========================================== -->
+    <!-- SECCIÓN 1: LISTADO CON BUSCADOR INTUITIVO  -->
+    <!-- ========================================== -->
+    <section id="seccion-listar" class="panel" aria-labelledby="listado-titulo">
+      <div class="barra-info">
+        <h2 id="listado-titulo" style="margin: 0;">Mis recordatorios</h2>
+        <button id="btn-recargar-listado" type="button">Actualizar listado</button>
+      </div>
+
+      <p id="estado-listado" role="status" aria-live="polite">Cargando recordatorios desde la base de datos…</p>
+      <p id="paginacion-listado" class="muted"></p>
+
+      <!-- Buscador intuitivo y visualmente agradable -->
+      <div class="buscador-contenedor">
+        <div class="buscador-fila-principal">
+          <div class="buscador-input-wrapper">
+            <span class="buscador-icono">🔎</span>
+            <input
+              id="buscador-texto"
+              class="buscador-input"
+              type="text"
+              placeholder="Buscar en tiempo real por mensaje, título de tarea o materia…"
+              autocomplete="off"
+            >
+            <button id="btn-limpiar-busqueda" class="buscador-limpiar" type="button" title="Limpiar búsqueda" hidden>×</button>
+          </div>
+        </div>
+
+        <div class="buscador-filtros">
+          <span style="font-size: 0.85rem; font-weight: 600; color: #475569;">Filtros:</span>
+          <button type="button" class="filtro-chip activo" data-filtro-leido="">Todos los estados</button>
+          <button type="button" class="filtro-chip" data-filtro-leido="false">⏳ Solo pendientes</button>
+          <button type="button" class="filtro-chip" data-filtro-leido="true">✓ Solo leídos</button>
+
+          <span style="margin-left: 8px; font-size: 0.85rem; font-weight: 600; color: #475569;">Canal:</span>
+          <select id="filtro-canal" class="filtro-select">
+            <option value="">Todos los canales</option>
+            <option value="in_app">📱 In-app</option>
+            <option value="email">✉️ Email</option>
+          </select>
+
+          <span style="margin-left: 8px; font-size: 0.85rem; font-weight: 600; color: #475569;">Orden:</span>
+          <select id="filtro-orden" class="filtro-select">
+            <option value="fechaHora-asc">Fecha (Próximos primero)</option>
+            <option value="fechaHora-desc">Fecha (Más lejanos primero)</option>
+            <option value="id-desc">ID (Más recientes)</option>
+            <option value="mensaje-asc">Mensaje (A-Z)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Tabla de resultados -->
+      <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Tabla de recordatorios">
+        <table>
+          <caption>Resultados de la consulta al API (<code>GET /api/v1/recordatorios</code>)</caption>
+          <thead>
+            <tr>
+              <th scope="col" style="width: 50px;">ID</th>
+              <th scope="col">Materia</th>
+              <th scope="col">Tarea asociada</th>
+              <th scope="col">Mensaje del recordatorio</th>
+              <th scope="col">Fecha programada</th>
+              <th scope="col">Canal</th>
+              <th scope="col">Estado</th>
+              <th scope="col" style="text-align: center;">Acciones rápidas</th>
+            </tr>
+          </thead>
+          <tbody id="recordatorios-tbody">
+            <!-- Rellenado dinámicamente con JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECCIÓN 2: CREAR RECORDATORIO              -->
+    <!-- ========================================== -->
+    <section id="seccion-crear" class="panel" aria-labelledby="crear-titulo" hidden>
+      <h2 id="crear-titulo">Crear recordatorio</h2>
+      <p class="muted">Completa los datos para programar un aviso. La tarea seleccionada debe pertenecer al usuario actual.</p>
+      <p><code>POST /api/v1/recordatorios</code></p>
+
+      <p id="estado-crear" role="status" aria-live="polite" class="muted">Ingresa los datos para registrar un recordatorio.</p>
+
+      <form id="formulario-crear">
+        <div class="formulario-grid">
+          <div class="campo campo-ancho-completo">
+            <label for="crear-tarea-id">Tarea asociada *</label>
+            <select id="crear-tarea-id" required>
+              <option value="">Cargando tareas disponibles…</option>
+            </select>
+          </div>
+
+          <div class="campo campo-ancho-completo">
+            <label for="crear-mensaje">Mensaje del recordatorio * (máx. 255 caracteres)</label>
+            <input
+              id="crear-mensaje"
+              type="text"
+              maxlength="255"
+              placeholder="Ej: Entregar reporte final de bases de datos antes de medianoche"
+              required
+            >
+          </div>
+
+          <div class="campo">
+            <label for="crear-fecha-hora">Fecha y hora de la alerta *</label>
+            <input id="crear-fecha-hora" type="datetime-local" required>
+          </div>
+
+          <div class="campo">
+            <label for="crear-canal">Canal de notificación *</label>
+            <select id="crear-canal" required>
+              <option value="in_app">📱 In-app (Dentro de la aplicación)</option>
+              <option value="email">✉️ Correo electrónico (Email)</option>
+            </select>
+          </div>
+
+          <div class="campo campo-ancho-completo">
+            <label class="seleccion-campo" style="cursor: pointer;">
+              <input id="crear-leido" type="checkbox">
+              <span>Marcar inicialmente como ya leído</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="actions" style="margin-top: 24px;">
+          <button id="btn-enviar-crear" type="submit">Guardar recordatorio</button>
+          <button id="btn-reset-crear" type="reset" class="secondary">Restablecer valores</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECCIÓN 3: CONSULTAR Y EDITAR POR ID       -->
+    <!-- ========================================== -->
+    <section id="seccion-consultar" class="panel" aria-labelledby="consultar-titulo" hidden>
+      <h2 id="consultar-titulo">Consultar y editar recordatorio</h2>
+      <p class="muted">Consulta un recordatorio por su ID para editarlo (PUT / PATCH) o eliminarlo (DELETE).</p>
+
+      <!-- Barra para buscar por ID -->
+      <form id="formulario-buscar-id" style="margin-bottom: 24px;">
+        <label for="consultar-id-input">ID de recordatorio a consultar:</label>
+        <div style="display: flex; gap: 10px; max-width: 400px;">
+          <input id="consultar-id-input" type="number" min="1" step="1" required placeholder="Ej: 1">
+          <button type="submit" style="white-space: nowrap;">Consultar ID</button>
+        </div>
+      </form>
+
+      <p id="estado-consultar" role="status" aria-live="polite">Ingresa un ID para cargar los datos del recordatorio.</p>
+
+      <form id="formulario-editar" hidden>
+        <div class="formulario-grid">
+          <div class="campo">
+            <label for="editar-id">ID de recordatorio</label>
+            <input id="editar-id" type="text" readonly style="background: #f8fafc; font-weight: bold;">
+          </div>
+
+          <div class="campo">
+            <label for="editar-tarea-id">Tarea asociada *</label>
+            <select id="editar-tarea-id" required></select>
+          </div>
+
+          <div class="campo campo-ancho-completo">
+            <label for="editar-mensaje">Mensaje *</label>
+            <input id="editar-mensaje" type="text" maxlength="255" required>
+          </div>
+
+          <div class="campo">
+            <label for="editar-fecha-hora">Fecha y hora *</label>
+            <input id="editar-fecha-hora" type="datetime-local" required>
+          </div>
+
+          <div class="campo">
+            <label for="editar-canal">Canal *</label>
+            <select id="editar-canal" required>
+              <option value="in_app">📱 In-app</option>
+              <option value="email">✉️ Email</option>
+            </select>
+          </div>
+
+          <div class="campo campo-ancho-completo">
+            <label class="seleccion-campo" style="cursor: pointer;">
+              <input id="editar-leido" type="checkbox">
+              <span>Estado: Marcar como leído</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="actions" style="margin-top: 24px;">
+          <button id="btn-patch" type="button" class="secondary" title="Actualiza únicamente los campos modificados (PATCH)">
+            ✏️ Actualizar cambios (PATCH)
+          </button>
+          <button id="btn-put" type="button" class="secondary" title="Reemplaza la representación completa del recurso (PUT)">
+            🔄 Reemplazar todo (PUT)
+          </button>
+          <button id="btn-delete" type="button" class="danger" style="margin-left: auto;">
+            🗑️ Eliminar recordatorio
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECCIÓN 4: TAREAS DISPONIBLES (SOLO LECTURA)-->
+    <!-- ========================================== -->
+    <section id="seccion-tareas" class="panel" aria-labelledby="tareas-titulo" hidden>
+      <div class="barra-info">
+        <h2 id="tareas-titulo" style="margin: 0;">Tareas disponibles del usuario</h2>
+        <button id="btn-recargar-tareas" type="button">Actualizar tareas</button>
+      </div>
+      <p class="muted">Lista de tareas activas pertenecientes a tus materias. Desde aquí puedes crear recordatorios directamente vinculados.</p>
+      <p><code>GET /api/v1/recordatorios/tareas</code></p>
+      <p id="estado-tareas" role="status" aria-live="polite">Cargando tareas disponibles…</p>
+
+      <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Tabla de tareas disponibles">
+        <table>
+          <caption>Tareas registradas asociadas al usuario actual</caption>
+          <thead>
+            <tr>
+              <th scope="col" style="width: 50px;">ID Tarea</th>
+              <th scope="col">Materia</th>
+              <th scope="col">Título de la tarea</th>
+              <th scope="col">Fecha de entrega</th>
+              <th scope="col">Prioridad</th>
+              <th scope="col">Estado</th>
+              <th scope="col" style="text-align: center;">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tareas-tbody">
+            <!-- Rellenado dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Visor de respuesta JSON para inspección técnica / calificación -->
+    <details class="toggle-json">
+      <summary>🔍 Inspeccionar respuesta JSON devuelta por el API (para verificación)</summary>
+      <pre id="resultado-json" tabindex="0">Sin consultas ejecutadas aún.</pre>
+    </details>
+
+    <footer>
+      El ejemplo completo está en <code>js/llamadosCompletos/recordatorios.js</code> y <code>js/api/recordatorios.js</code>.
+      También puedes ver los resultados en la consola del navegador (F12).
+    </footer>
+  </main>
+</body>
+</html>
